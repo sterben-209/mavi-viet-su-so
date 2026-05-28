@@ -1,5 +1,4 @@
 export type PostStatus = 'pending' | 'approved' | 'rejected'
-
 export interface AdminPost {
   id: string
   title: string
@@ -11,6 +10,8 @@ export interface AdminPost {
   status: PostStatus
   excerpt: string
   attachments: number
+  aiScore?: number
+}
   aiScore?: number
 }
 
