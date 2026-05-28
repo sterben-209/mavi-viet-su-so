@@ -95,6 +95,12 @@ export function Navbar({ onContributeClick }: NavbarProps) {
                     className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/5 no-underline transition-colors">
                     <User size={14} /> Trang cá nhân
                   </Link>
+                  {user.role === 'admin' && (
+                    <Link href="/admin" onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gold/80 hover:text-gold hover:bg-white/5 no-underline transition-colors">
+                      <Shield size={14} /> Admin Dashboard
+                    </Link>
+                  )}
                   <button onClick={handleLogout}
                     className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-white/50 hover:text-red-400 hover:bg-white/5 cursor-pointer bg-transparent border-none text-left transition-colors">
                     <LogOut size={14} /> Đăng xuất
@@ -141,6 +147,7 @@ export function Navbar({ onContributeClick }: NavbarProps) {
           {user ? (
             <>
               <Link href="/profile" onClick={() => setMenuOpen(false)} className="text-sm text-white/70 no-underline py-2">Trang cá nhân</Link>
+              {user.role === 'admin' && <Link href="/admin" onClick={() => setMenuOpen(false)} className="text-sm text-gold/80 no-underline py-2">Admin Dashboard</Link>}
               <button onClick={() => { handleLogout(); setMenuOpen(false) }} className="text-sm text-white/50 text-left bg-transparent border-none cursor-pointer py-2">Đăng xuất</button>
             </>
           ) : (

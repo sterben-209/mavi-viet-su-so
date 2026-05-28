@@ -20,6 +20,16 @@ export default function LoginPage() {
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' })
   const [error, setError] = useState('')
 
+  // Check for unauthorized access from URL
+  useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('error') === 'unauthorized') {
+        setError('Tài khoản của bạn không có quyền truy cập trang quản trị.')
+      }
+    }
+  })
+
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }))
 

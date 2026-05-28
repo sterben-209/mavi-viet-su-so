@@ -1,33 +1,18 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import clsx from 'clsx'
-import { MAP_PERIOD_FILTERS, MAP_GRADE_FILTERS } from '@/lib/data'
-import type { MapPin, MapMemory } from '@/types'
-import { fetchMapPins } from '@/lib/api'
-import { Loader2 } from 'lucide-react'
+import { MAP_PINS, MAP_MEMORIES, MAP_PERIOD_FILTERS, MAP_GRADE_FILTERS } from '@/lib/data'
+import type { MapPin } from '@/types'
 
-// Approximate percent positions on a Vietnam map bounding box based on coordinates
-// This is a helper to map real lat/lng to the visual map if fixed positions aren't available
-const getPinPosition = (pin: MapPin) => {
-  // If we have a hardcoded position for the ID, use it
-  const fixedPositions: Record<string, { left: string; top: string }> = {
-    '1': { left: '54%', top: '62%' },
-    '2': { left: '52%', top: '60%' },
-    '3': { left: '53%', top: '58%' },
-    '4': { left: '47%', top: '35%' },
-    '5': { left: '43%', top: '18%' },
-  }
-  
-  if (fixedPositions[pin.id]) return fixedPositions[pin.id]
-
-  // Fallback: Map lat/lng to roughly Vietnam's shape (simplified)
-  // Vietnam lat range: 8.5 to 23.5, lng range: 102 to 109.5
-  const top = 100 - ((pin.lat - 8.5) / (23.5 - 8.5)) * 80 + 10 // top 10% to 90%
-  const left = ((pin.lng - 102) / (109.5 - 102)) * 60 + 20 // left 20% to 80%
-  
-  return { left: `${left}%`, top: `${top}%` }
+// Approximate percent positions on a Vietnam map bounding box
+const PIN_POSITIONS: Record<string, { left: string; top: string }> = {
+  '1': { left: '54%', top: '62%' },
+  '2': { left: '52%', top: '60%' },
+  '3': { left: '53%', top: '58%' },
+  '4': { left: '47%', top: '35%' },
+  '5': { left: '43%', top: '18%' },
 }
 
 export function MemoryMap() {
@@ -35,32 +20,6 @@ export function MemoryMap() {
   const [activePeriods, setActivePeriods] = useState<Set<string>>(new Set(['Tất cả']))
   const [activeGrades, setActiveGrades] = useState<Set<string>>(new Set(['Lớp 9']))
   const [hoveredPin, setHoveredPin] = useState<string | null>(null)
-  const [pins, setPins] = useState<MapPin[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const loadMapData = async () => {
-      setLoading(true)
-      try {
-        const data = await fetchMapPins()
-        setPins(data)
-      } catch (error) {
-        console.error('Error loading map pins:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadMapData()
-  }, [])
-
-  // Derived memories from pins for the sidebar
-  const memories: MapMemory[] = pins.slice(0, 5).map(p => ({
-    id: p.id,
-    title: p.title,
-    location: p.location,
-    variant: p.variant || 'red',
-    slug: p.slug
-  }))
 
   const togglePeriod = (p: string) => {
     setActivePeriods((prev) => {
@@ -191,7 +150,7 @@ export function MemoryMap() {
             Ký Ức Gần Đây
           </h4>
           <div className="divide-y divide-white/[0.06]">
-            {memories.map((mem) => (
+            {MAP_MEMORIES.map((mem) => (
               <div
                 key={mem.id}
                 className="flex gap-2.5 py-3 cursor-pointer group"
@@ -209,73 +168,57 @@ export function MemoryMap() {
                 </div>
               </div>
             ))}
-            {memories.length === 0 && !loading && (
-              <p className="text-[11px] text-white/30 py-4">Chưa có dữ liệu ký ức.</p>
-            )}
           </div>
         </div>
 
-        {/* Loading Overlay */}
-        {loading && (
-          <div className="absolute inset-0 bg-navy/40 backdrop-blur-[2px] z-20 flex items-center justify-center">
-            <div className="flex flex-col items-center">
-              <Loader2 className="w-8 h-8 animate-spin text-gold mb-2" />
-              <p className="text-white/60 text-xs font-medium tracking-widest uppercase">Đang nạp bản đồ...</p>
-            </div>
-          </div>
-        )}
-
         {/* Map Pins */}
-        {pins.map((pin) => {
-          const pos = getPinPosition(pin);
-          return (
+        {MAP_PINS.map((pin) => (
+          <div
+            key={pin.id}
+            className="absolute cursor-pointer transition-transform duration-300 hover:-translate-y-[10%]"
+            style={{
+              left: PIN_POSITIONS[pin.id]?.left ?? '50%',
+              top: PIN_POSITIONS[pin.id]?.top ?? '50%',
+              transform: 'translate(-50%, -100%)',
+            }}
+            onMouseEnter={() => setHoveredPin(pin.id)}
+            onMouseLeave={() => setHoveredPin(null)}
+            onClick={() => goToPost(pin)}
+          >
+            {/* Dot */}
             <div
-              key={pin.id}
-              className="absolute cursor-pointer transition-transform duration-300 hover:-translate-y-[10%] z-10"
+              className="w-3.5 h-3.5 rounded-full border-2 border-white/80"
               style={{
-                left: pos.left,
-                top: pos.top,
-                transform: 'translate(-50%, -100%)',
+                background: pin.variant === 'gold' ? '#D4A017' : '#B91C1C',
+                boxShadow:
+                  pin.variant === 'gold'
+                    ? '0 0 0 4px rgba(212,160,23,0.3)'
+                    : '0 0 0 4px rgba(185,28,28,0.3)',
+                animation:
+                  pin.variant === 'gold'
+                    ? 'pulsePinGold 2s ease infinite'
+                    : 'pulsePin 2s ease infinite',
               }}
-              onMouseEnter={() => setHoveredPin(pin.id)}
-              onMouseLeave={() => setHoveredPin(null)}
-              onClick={() => goToPost(pin)}
-            >
-              {/* Dot */}
-              <div
-                className="w-3.5 h-3.5 rounded-full border-2 border-white/80"
-                style={{
-                  background: pin.variant === 'gold' ? '#D4A017' : '#B91C1C',
-                  boxShadow:
-                    pin.variant === 'gold'
-                      ? '0 0 0 4px rgba(212,160,23,0.3)'
-                      : '0 0 0 4px rgba(185,28,28,0.3)',
-                  animation:
-                    pin.variant === 'gold'
-                      ? 'pulsePinGold 2s ease infinite'
-                      : 'pulsePin 2s ease infinite',
-                }}
-              />
+            />
 
-              {/* Tooltip */}
-              {hoveredPin === pin.id && (
-                <div
-                  className="absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 w-[200px] rounded-[10px] p-3 pointer-events-none z-10"
-                  style={{
-                    background: '#0F172A',
-                    border: '1px solid rgba(255,255,255,0.13)',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-                  }}
-                >
-                  <h5 className="text-[13px] text-white font-semibold mb-1">{pin.title}</h5>
-                  <p className="text-[11px] text-white/50">
-                    {pin.location} · {pin.grade}
-                  </p>
-                </div>
-              )}
-            </div>
-          )
-        })}
+            {/* Tooltip */}
+            {hoveredPin === pin.id && (
+              <div
+                className="absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 w-[200px] rounded-[10px] p-3 pointer-events-none z-10"
+                style={{
+                  background: '#0F172A',
+                  border: '1px solid rgba(255,255,255,0.13)',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                }}
+              >
+                <h5 className="text-[13px] text-white font-semibold mb-1">{pin.title}</h5>
+                <p className="text-[11px] text-white/50">
+                  {pin.location} · {pin.grade}
+                </p>
+              </div>
+            )}
+          </div>
+        ))}
 
         {/* Legend */}
         <div

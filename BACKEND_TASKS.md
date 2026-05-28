@@ -29,3 +29,6 @@ Dựa trên yêu cầu từ Frontend, dưới đây là danh sách các đầu v
 ## 6. Kỹ thuật & Hạ tầng
 - [ ] **Environment Variables:** Đảm bảo `OPENROUTER_API_KEY` và Firebase config đã được cấu hình đúng trên môi trường production.
 - [ ] **CORS:** Cấu hình CORS để cho phép Frontend (Next.js) gọi API từ domain khác.
+tách admin ra web riêng 
+làm trang viết cho admin 
+sửa font chữ 

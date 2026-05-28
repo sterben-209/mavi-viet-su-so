@@ -119,7 +119,7 @@ export default function ProfilePage() {
 
         {/* Stats bar */}
         <div className="bg-white border-b border-navy/[0.08] px-[8vw]">
-          <div className="flex gap-8 -mt-6">
+          <div className="flex gap-8 -mt-6 relative z-10">
             {[
               { num: user.contributions, label: 'Đóng góp' },
               { num: '1.2K', label: 'Lượt xem' },
