@@ -12,8 +12,6 @@ export interface AdminPost {
   attachments: number
   aiScore?: number
 }
-  aiScore?: number
-}
 
 export interface AdminUser {
   id: string
